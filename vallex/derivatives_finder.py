@@ -2,7 +2,8 @@
 from vallex import vallex_parser
 from derinet.lemma import Lemma
 
-def find_derivatives(suffix="ící", vallex_path="./data_sources/vallex/Vendula_3.tsv"):
+def find_derivatives(suffix="", vallex_path="./data_sources/vallex/Vendula_3.tsv",
+                     compounding='no',filter_suffixes=None):
     lines, lemmas, lemmas_se = vallex_parser.read_nom_valex_input(vallex_path)
 
     word_dict = {word: i for i, word in enumerate(lemmas)}
@@ -20,18 +21,20 @@ def find_derivatives(suffix="ící", vallex_path="./data_sources/vallex/Vendula_
             has_derivative = False
             for child in derinet_lemma.children:
                 if child.name.endswith(suffix):
+                    if compounding == "no" and child.deriv_type == "Compounding":
+                        continue
+                    filter_suffix_match = False
+                    for filter_suffix in filter_suffixes:
+                        if child.name.endswith(filter_suffix):
+                            filter_suffix_match = True
+                            break
+                    if filter_suffix_match:
+                        continue
                     print(line +  "\tDIRECT\t" + child.name + "\t" + str(child.abs_count) + "\t" + str(child.corp_freq) + "\t" + child.techlemma+ "\t" + child.tag)
                     if child.abs_count > 0:
                         n_of_all_direct_non_zero +=1
                     n_of_all_direct +=1
                     has_derivative = True
-                    break
-            # if has_derivative == False:
-            #     if (lemma + "elný") in Lemma.lemma_dict:
-            #         deriv_lemma =  Lemma.lemma_dict[(lemma + "elný")]
-            #         # print(line +  "\tINDIRECT\t" + deriv_lemma.name + "\t" + str(deriv_lemma.abs_count) + "\t" + str(deriv_lemma.corp_freq)+ "\t" + deriv_lemma.techlemma+ "\t" + deriv_lemma.tag)
-            #         print(lemma + "\t" + deriv_lemma.name + "\t" + str(deriv_lemma.abs_count) + "\t" + deriv_lemma.parent.name)
-            #         n_of_all_indirect +=1
                 else:
                     # print(line + "\tNO DERIVATIVE")
                     n_of_all_not_derivative +=1
